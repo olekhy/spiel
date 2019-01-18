@@ -1,0 +1,10 @@
+version: "3"
+services:
+  php:
+    container_name: spiel
+    build:
+      context: .docker
+    volumes:
+      - ./:/app
+      - .docker/php-ini-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
+
