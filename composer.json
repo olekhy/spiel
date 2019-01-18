@@ -48,7 +48,7 @@
     "cs-check": "phpcs -p",
     "cs-fix": "phpcbf -p",
     "analyse": [
-      "phpstan analyse --configuration=phpstan.neon src/ tests/ --level max"
+      "phpstan analyse --configuration=phpstan.neon bin/ src/ tests/ --level max"
     ],
     "check": [
       "@cs-check",
