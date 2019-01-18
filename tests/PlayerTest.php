@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Olekhy\Spiel\Tests;
 
+use Olekhy\Spiel\Gambler;
+use Olekhy\Spiel\Game;
+use Olekhy\Spiel\Reporter;
+use Olekhy\Spiel\StoneScissorPaperRules;
+use Olekhy\Spiel\SymbolEnum;
+use Olekhy\Spiel\TossGameStrategy;
 use PHPUnit\Framework\TestCase;
 
 final class PlayerTest extends TestCase
@@ -11,70 +17,118 @@ final class PlayerTest extends TestCase
     public function testItAPlayerThrownASymbolByStrategy() : void
     {
         $symbol         = SymbolEnum::STONE();
-        $playerStrategy = $this->createMock(PlayerStrategy::class);
-        $playerStrategy->expects(self::once())->method('throw')->willReturn($symbol);
-        $player = new Player($playerStrategy, 'Bob');
-        $actual = $player->pull();
+        $playerStrategy = $this->createMock(TossGameStrategy::class);
+        $playerStrategy->expects(self::once())->method('toss')->willReturn($symbol);
+        $player = new Gambler($playerStrategy, 'Bob');
+        $actual = $player->tossSymbol();
         self::assertSame($symbol, $actual);
     }
 
     public function testItAGame() : void
     {
         $symbol         = SymbolEnum::STONE();
-        $playerStrategy = $this->createMock(PlayerStrategy::class);
-        $playerStrategy->expects(self::exactly(2))->method('throw')->willReturn($symbol);
-        $reporter = $this->createMock(Reporter::class);
-        $bob      = new Player($playerStrategy, 'Bob');
-        $alice    = new Player($playerStrategy, 'Alice');
+        $playerStrategy = $this->createMock(TossGameStrategy::class);
+        $playerStrategy->expects(self::exactly(2))->method('toss')->willReturn($symbol);
+
+        $reporter = new Reporter();
+        $bob      = new Gambler($playerStrategy, 'Bob');
+        $alice    = new Gambler($playerStrategy, 'Alice');
         $game     = new Game($bob, $alice, $reporter);
-        $game->play(1);
-        $actual = $reporter->result();
-        self::assertSame('Bob wins: 0, Alice wins :0, Draw: 1', $actual);
+        $rules    = new StoneScissorPaperRules();
+        $reporter = $game->play(1, $rules);
+        $actual   = (string) $reporter;
+        self::assertSame(
+            'Stone scissor and paper the game of the year 2018
+=================================================
+Game rounds:    1
+-----------------
+Game with draw: 1
+-----------------
+Bob wins:       0
+-----------------
+Alice wins:     0
+-----------------
+',
+            $actual
+        );
     }
 
     public function testItAPlayerWins() : void
     {
         $symbolStone         = SymbolEnum::STONE();
         $symbolScissor       = SymbolEnum::SCISSOR();
-        $playerStrategyStone = $this->createMock(PlayerStrategy::class);
-        $playerStrategyStone->expects(self::exactly(2))->method('throw')->willReturn($symbolStone);
+        $playerStrategyStone = $this->createMock(TossGameStrategy::class);
+        $playerStrategyStone->expects(self::once())->method('toss')->willReturn($symbolStone);
 
-        $playerStrategyScissor = $this->createMock(PlayerStrategy::class);
-        $playerStrategyScissor->expects(self::exactly(2))->method('throw')->willReturn($symbolScissor);
+        $playerStrategyScissor = $this->createMock(TossGameStrategy::class);
+        $playerStrategyScissor->expects(self::once())->method('toss')->willReturn($symbolScissor);
 
-        $rules = new GameRules();
-        $rules->add(SymbolEnum::STONE(), SymbolEnum::STONE() | SymbolEnum::SCISSOR());
+        $rules = new StoneScissorPaperRules();
 
-        $reporter = $this->createMock(Reporter::class);
-        $bob      = new Player($playerStrategyStone, 'Bob');
-        $alice    = new Player($playerStrategyScissor, 'Alice');
-        $game     = new Game($bob, $alice, $rules, $reporter);
-        $game->play(1);
-        $actual = $reporter->result();
-        self::assertSame('Bob wins: 1, Alice wins: 0, Draw: 0', $actual);
+        $reporter = new Reporter();
+        $bob      = new Gambler($playerStrategyStone, 'Bob');
+        $alice    = new Gambler($playerStrategyScissor, 'Alice');
+        $game     = new Game($bob, $alice, $reporter);
+        $game->play(1, $rules);
+        $actual = (string) $reporter;
+        self::assertSame(
+            'Stone scissor and paper the game of the year 2018
+=================================================
+Game rounds:     1
+------------------
+Games with draw: 0
+------------------
+Alice wins:      0
+------------------
+Bob wins:        1
+------------------
+',
+            $actual
+        );
     }
 
-    public function testGameRules() : void
+    public function testGameRulesStoneWinsWhenTossStoneAndScissor() : void
     {
-        $gameRules = new GameRules();
-        $gameRules->add(SymbolEnum::STONE(), SymbolEnum::STONE(), SymbolEnum::SCISSOR());
-        $gameRules->add(SymbolEnum::SCISSOR(), SymbolEnum::PAPER(), SymbolEnum::SCISSOR());
-        $gameRules->add(SymbolEnum::PAPER(), SymbolEnum::STONE(), SymbolEnum::PAPER());
+        $gameRules     = new StoneScissorPaperRules();
+        $strategyStone = $this->createMock(TossGameStrategy::class);
+        $strategyStone->expects(self::once())->method('toss')->willReturn(SymbolEnum::STONE());
+        $gamblerStone = new Gambler($strategyStone, 'Stone');
 
-        $stoneActual = $gameRules->verfify(SymbolEnum::STONE(), SymbolEnum::SCISSOR());
-        self::assertSame($stoneActual, SymbolEnum::STONE());
+        $strategyScissor = $this->createMock(TossGameStrategy::class);
+        $strategyScissor->expects(self::once())->method('toss')->willReturn(SymbolEnum::SCISSOR());
+        $otherScissor = new Gambler($strategyScissor, 'Scissor');
 
-        $scissorActual = $gameRules->verfify(SymbolEnum::PAPER(), SymbolEnum::SCISSOR());
-        self::assertSame($scissorActual, SymbolEnum::SCISSOR());
-
-        $paperActual = $gameRules->verfify(SymbolEnum::STONE(), SymbolEnum::PAPER());
-        self::assertSame($paperActual, SymbolEnum::PAPER());
+        $actual = $gameRules->verify($gamblerStone, $otherScissor);
+        self::assertSame($gamblerStone, $actual);
     }
 
-    public function testItThrownAnExceptionWhenAddedInvalidRule() : void
+    public function testGameRulesScissorWinsWhenTossPaperAndScissor() : void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $gameRules = new GameRules();
-        $gameRules->add(SymbolEnum::STONE(), SymbolEnum::STONE(), SymbolEnum::STONE());
+        $gameRules     = new StoneScissorPaperRules();
+        $strategyPaper = $this->createMock(TossGameStrategy::class);
+        $strategyPaper->expects(self::once())->method('toss')->willReturn(SymbolEnum::PAPER());
+        $gamblerPaper = new Gambler($strategyPaper, 'Paper');
+
+        $strategyScissor = $this->createMock(TossGameStrategy::class);
+        $strategyScissor->expects(self::once())->method('toss')->willReturn(SymbolEnum::SCISSOR());
+        $otherScissor = new Gambler($strategyScissor, 'Scissor');
+
+        $actual = $gameRules->verify($gamblerPaper, $otherScissor);
+        self::assertSame($otherScissor, $actual);
+    }
+
+    public function testGameRulesPaperWinsWhenTossPaperAndStone() : void
+    {
+        $gameRules     = new StoneScissorPaperRules();
+        $strategyPaper = $this->createMock(TossGameStrategy::class);
+        $strategyPaper->expects(self::once())->method('toss')->willReturn(SymbolEnum::PAPER());
+        $gamblerPaper = new Gambler($strategyPaper, 'Paper');
+
+        $strategyStone = $this->createMock(TossGameStrategy::class);
+        $strategyStone->expects(self::once())->method('toss')->willReturn(SymbolEnum::STONE());
+        $otherStone = new Gambler($strategyStone, 'Stone');
+
+        $actual = $gameRules->verify($gamblerPaper, $otherStone);
+        self::assertSame($gamblerPaper, $actual);
     }
 }
