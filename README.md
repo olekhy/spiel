@@ -12,7 +12,7 @@ Implemented on PHP 7.2 with static typing enabled. Can in Docker Container to ex
 
 Automated Test and code coverage
 
-#####Install 
+##### Install 
 After a successfully git clone or unzip of downloaded package we should install all dependency.
 `docker-compose run --user 1000:1000 php composer install`  
 
@@ -21,3 +21,5 @@ Check application is ok
 
 To setup app with you needs, go to `bin/` open `exe.php` and make needed changes. Eg change gambler strategy.
 
+##### Preview
+![preview](media/screen.jpg "Preview output")

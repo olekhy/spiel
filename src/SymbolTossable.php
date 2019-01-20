@@ -6,5 +6,5 @@ namespace Olekhy\Spiel;
 
 interface SymbolTossable
 {
-    public function tossSymbol() : SymbolEnum;
+    public function toss() : Symbol;
 }

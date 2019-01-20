@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Olekhy\Spiel;
 
+use Olekhy\Spiel\Strategy\TossGameStrategy;
+
 final class Gambler implements SymbolTossable
 {
     /** @var TossGameStrategy */
@@ -17,7 +19,7 @@ final class Gambler implements SymbolTossable
         $this->name     = $name;
     }
 
-    public function tossSymbol() : SymbolEnum
+    public function toss() : Symbol
     {
         return $this->strategy->toss();
     }

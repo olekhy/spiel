@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Olekhy\Spiel\FixStoneTossStrategy;
 use Olekhy\Spiel\Gambler;
 use Olekhy\Spiel\Game;
-use Olekhy\Spiel\RandomSymbolTossStrategy;
-use Olekhy\Spiel\Reporter;
-use Olekhy\Spiel\StoneScissorPaperRules;
+use Olekhy\Spiel\Report\ReporterConsole;
+use Olekhy\Spiel\Rule\RockScissorPaperRules;
+use Olekhy\Spiel\Strategy\FixRockTossStrategy;
+use Olekhy\Spiel\Strategy\RandomSymbolTossStrategy;
 
-$bobStrategy   = new FixStoneTossStrategy();
-$bob           = new Gambler($bobStrategy, 'Bob');
+$bobStrategy   = new FixRockTossStrategy();
 $aliceStrategy = new RandomSymbolTossStrategy();
-$alice         = new Gambler($aliceStrategy, 'Alice');
 
-$reporter = new Reporter();
-$rules    = new StoneScissorPaperRules();
+$bob   = new Gambler($bobStrategy, 'Bob');
+$alice = new Gambler($aliceStrategy, 'Alice');
+
+$reporter = new ReporterConsole($bob, $alice);
+$rules    = new RockScissorPaperRules();
 $game     = new Game($bob, $alice, $reporter);
 $result   = $game->play(100, $rules);
 
+\system('clear');
 $result->print();
