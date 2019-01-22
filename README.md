@@ -1,5 +1,7 @@
 ## SPIEL ##
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1555e05591444433801a32de56489908)](https://app.codacy.com/app/olekhy/spiel?utm_source=github.com&utm_medium=referral&utm_content=olekhy/spiel&utm_campaign=Badge_Grade_Settings)
+
 The game of rock paper scissors, see [wiki](https://en.wikipedia.org/wiki/Rock%E2%80%93paper%E2%80%93scissors)
 
 Implemented on PHP 7.2 with static typing enabled. Can in Docker Container to executed.
